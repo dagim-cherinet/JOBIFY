@@ -16,13 +16,23 @@ const register = async (req, res) => {
   if (!name || !email || !password) {
     throw new BadRequestError("please provide all values");
   }
-  const userAlreadyExist = User.findOne({ email });
-  if (userAlreadyExist) {
-    throw new BadRequestError("Email already exist");
-  }
+  // const userAlreadyExist = User.findOne({ email });
+  // if (userAlreadyExist) {
+  //   throw new BadRequestError("Email already exist");
+  // }
   const user = await User.create(req.body);
-  console.log(req.body);
-  res.status(StatusCodes.CREATED).json({ user });
+  //console.log(req.body);
+  const token = user.createJWT();
+  res.status(StatusCodes.CREATED).json({
+    user: {
+      name: user.name,
+      email: user.email,
+      lastName: user.lastName,
+      location: user.location,
+    },
+    token,
+    location: "my city",
+  });
 };
 const login = async (req, res) => {
   res.send("login");
