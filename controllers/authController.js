@@ -1,6 +1,7 @@
 import User from "../models/Users.js";
-import { BadRequestError } from "../errors/index.js";
+import { BadRequestError, UnauthenticatedError } from "../errors/index.js";
 import { StatusCodes } from "http-status-codes";
+import bcryptjs from "bcryptjs";
 const register = async (req, res) => {
   // res.send("register controller...");
   // try {
@@ -35,7 +36,25 @@ const register = async (req, res) => {
   });
 };
 const login = async (req, res) => {
-  res.send("login");
+  console.log(req.body);
+  const { email, password } = req.body;
+  if (!email || !password) {
+    throw new BadRequestError("please provide all values");
+  }
+  const user = await User.findOne({ email: email }).select("+password");
+  console.log(user);
+  if (!user) {
+    throw new UnauthenticatedError("no user with this email");
+  }
+
+  // const isPasswordCorrect = await bcryptjs.compare(password, user.password);
+  const isPasswordCorrect = await user.checkPassword(password);
+  if (!isPasswordCorrect) {
+    throw new UnauthenticatedError("invalid login");
+  }
+  const token = user.createJWT();
+  user.password = undefined;
+  res.status(StatusCodes.OK).json({ user, token, location: user.location });
 };
 const updateUser = async (req, res) => {
   res.send("update user");
