@@ -40,6 +40,10 @@ const UserSchema = new mongoose.Schema({
   },
 });
 UserSchema.pre("save", async function () {
+  // findOne returns everything except password
+  // during update save() triggers this method so if i don't use the below code error will occur because
+  // password is not returned b/c select: false in the schema
+  if (!this.isModified("password")) return;
   console.log(this.password);
   const salt = await bcryptjs.genSalt(10);
   this.password = await bcryptjs.hash(this.password, salt);

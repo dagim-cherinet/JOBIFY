@@ -1,7 +1,7 @@
 import User from "../models/Users.js";
 import { BadRequestError, UnauthenticatedError } from "../errors/index.js";
 import { StatusCodes } from "http-status-codes";
-import bcryptjs from "bcryptjs";
+
 const register = async (req, res) => {
   // res.send("register controller...");
   // try {
@@ -57,7 +57,19 @@ const login = async (req, res) => {
   res.status(StatusCodes.OK).json({ user, token, location: user.location });
 };
 const updateUser = async (req, res) => {
-  res.send("update user");
+  const { email, name, lastName, location } = req.body;
+  if (!email || !name || !lastName || !location) {
+    throw new BadRequestError("please provide all values");
+  }
+  const user = await User.findOne({ _id: req.user.userId });
+  user.email = email;
+  user.name = name;
+  user.lastName = lastName;
+  user.location = location;
+  //saving the change
+  await user.save();
+  const token = user.createJWT();
+  res.status(StatusCodes.OK).json({ user, token, location: user.location });
 };
 
 export { register, login, updateUser };
